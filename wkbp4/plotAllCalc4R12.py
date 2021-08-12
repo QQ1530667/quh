@@ -1,86 +1,57 @@
-import numpy as np
-import scipy.optimize as sopt
-import matplotlib.pyplot as plt
-from datetime import datetime
+from plotAllFuncs4R12 import *
 
-# this script combines calculations from WKB
-# and shooting as a verification for potential 4, V(x)=x^{2}-igx^{5}
-# in region I-II
-# WKB part
+# this script calculates and plots eigenvalues, potential 4, V(x)=x^{2}-igx^{5}
+# Region I-II
 
-def retX1X2(g, E):
-    '''
-    :param g: const
-    :param E: trial eigenvalue
-    :return: x1 and x2 of
-    '''
-    coefs = [-1j * g, 0, 0, 1, 0, -E]
-    rootsAll = np.roots(coefs)
-    # print(rootsAll)
-    rootsAll = sorted(rootsAll, key=np.angle, reverse=True)
-    x1Val = rootsAll[3]
-    x2Val = rootsAll[4]
+gnIndAll = np.linspace(start=-7, stop=-0, num=1)
+gAll = [10 ** elem for elem in gnIndAll]
+EWKB = []
+# calculate WKB eigenvalues
 
-    # print(x1Val)
-    return x1Val, x2Val
+# calculate WKB eigenvalues
 
+energyLevelMax = 30
+tWKBStart = datetime.now()
+for gTmp in gAll:
+    nAndEPairs = []
+    for nTmp in range(0, energyLevelMax + 1):
+        dataTmp = (nTmp, gTmp)
+        eVecTmp = sopt.fsolve(eqn, [np.abs(nTmp + 0.5), 0], args=dataTmp, maxfev=100, xtol=1e-7)
+        eValTmp = eVecTmp[0] + 1j * eVecTmp[1]
 
-def f(z, g, E):
-    '''
-    :param g: const
-    :param z: point on x2x1
-    :param E: trial eigenvalue
-    :return: f value
-    '''
-    return (1j * g * z ** 5 - z ** 2 + E) ** (1 / 2)
+        nAndEPairs.append([nTmp, eValTmp])
+    EWKB.append(nAndEPairs)
 
+tWKBEnd = datetime.now()
 
-def simpInt(g, E, N, x1, x2):
-    '''
-    :param E: trial eigenvalue
-    :param N: number of subintervals
-    :param x1:
-    :param x2:
-    :return: simpson integral
-    '''
-    a1 = np.real(x1)
-    b1 = np.imag(x1)
+print("time for WKB: ", tWKBEnd - tWKBStart)
 
-    a2 = np.real(x2)
-    b2 = np.imag(x2)
+tPltStart = datetime.now()
+fig, ax = plt.subplots(figsize=(20, 20))
 
-    deltaA = (a1 - a2) / N
-    slope = (b1 - b2) / (a1 - a2)
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_ylabel("E")
+ax.set_xlabel("g")
+ax.set_title("Eigenvalues for potential $V(x)=x^{2}-igx^{5}$")
+# plot WKB
+gSctVals = []
+ERealSctVals = []
+EImagSctVals = []
+for j in range(0, len(gAll)):
+    gTmp = gAll[j]
+    nAndEPairsTmp = EWKB[j]
+    if len(nAndEPairsTmp) > 0:
+        for pairTmp in nAndEPairsTmp:
+            gSctVals.append(gTmp)
+            ERealSctVals.append(np.real(pairTmp[1]))
+            # sctWKB = ax.scatter(gTmp, np.real(pairTmp[1]), color="red", marker=".", s=50)
 
-    zAll = []
+sctRealPartWKB = ax.scatter(gSctVals, ERealSctVals, color="red", marker=".", s=50, label="WKB real part")
 
-    for j in range(0, N + 1):
-        # j=0,1,...,N
-        aj = deltaA * j + a2
-        bj = slope * (aj - a2) + b2
-        zAll.append(aj + 1j * bj)
-    fValsOdd = [f(zAll[j], g, E) for j in range(1, N, 2)]
-    fValsEven = [f(zAll[j], g, E) for j in range(2, N, 2)]
+# plt.legend((sctRealPartWKB),("WKB real part"),loc="best",fontsize=15,scatterpoints=1)
+plt.legend()
+plt.savefig("tmp2.png")
 
-    return 1 / 3 * deltaA * (1 + 1j * slope) * (f(zAll[0], g, E)
-                                                + 4 * sum(fValsOdd)
-                                                + 2 * sum(fValsEven)
-                                                + f(zAll[N], g, E)
-                                                )
-
-
-def eqn(EIn,*data):
-    '''
-
-    :param EIn: trial eigenvalue, in the form of [re, im]
-    :return:
-    '''
-
-    n,g=data
-
-    E = EIn[0] + 1j * EIn[1]
-    x1, x2 = retX1X2(g,E)
-    dx = 1e-4
-    N = int(np.abs(x2 - x1) / dx)
-    rst = simpInt(g,E, N, x1, x2) - (n+1/2) * np.pi
-    return np.real(rst), np.imag(rst)
+tPltEnd = datetime.now()
+print("plotting time: ", tPltEnd - tPltStart)
