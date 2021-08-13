@@ -4,10 +4,15 @@ import matplotlib.pyplot as plt
 from decimal import Decimal
 #potential 6, V(x)=ix^{3}-gx^{4}
 N=100
-R=1000
 
-c=1e8
-rs=np.linspace(start=0,stop=R,num=N)
+
+c=1e-1
+#compute roots
+g=0.01
+E=g**(-1)*c
+coefs=[-g,1j,0,0,-E]
+rootsAll=np.roots(coefs)
+rs=np.linspace(start=0,stop=np.max(np.abs(rootsAll))*1.1,num=N)
 
 a0=1/3*np.pi
 
@@ -97,17 +102,22 @@ ax.text(tx,ty,"I-II",fontsize=16)
 tx=p4x[p]
 ty=1/3*(2*p4y[p]+q3y[p])
 ax.text(tx,ty,"I-II",fontsize=16)
-#compute roots
-g=0.01
-E=g**(-1)*c
-coefs=[-g,1j,0,0,-E]
-rootsAll=np.roots(coefs)
-print(np.abs(rootsAll))
+#compute angles
+rootsReversedAngle=sorted(rootsAll,key=np.angle,reverse=True)
+anglesAllInPi=[np.angle(rt)/np.pi for rt in rootsReversedAngle]
+print("angles in pi: ",anglesAllInPi)
+
+
 sVal=30
+#plot roots
 for tmp in rootsAll:
     ax.scatter(np.real(tmp),np.imag(tmp),color="black",s=sVal)
 
-ax.set_title("$ix^{3}-gx^{4}-E=0$, $g=$"+str(g)+", $E=$"+'{:.2e}'.format(Decimal(str(E))))
+
+
+ERe=np.real(E)
+EIm=np.imag(E)
+ax.set_title("$ix^{3}-gx^{4}-E=0$, $g=$"+str(g)+", $E=$"+'{:.2e}'.format(Decimal(str(ERe)))+"+i"+'{:.2e}'.format(Decimal(str(EIm))))
 
 
 
