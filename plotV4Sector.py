@@ -3,11 +3,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 from decimal import Decimal
 #potential 4, V(x)=x^{2}-igx^{5}
-N=100
-R=5
+#compute roots
+c=1e2
+g=0.01
+E=g**(-1/3)*c
+coefs=[-1j*g,0,0,1,0,-E]
+rootsAll=np.roots(coefs)
 
-c=1
-rs=np.linspace(start=0,stop=R,num=N)
+sVal=30
+fig,ax=plt.subplots(figsize=(20,20))
+
+N=100
+R=35
+
+
+rs=np.linspace(start=0,stop=np.max(np.abs(rootsAll))*1.1,num=N)
 
 
 a1=3/14*np.pi
@@ -67,7 +77,7 @@ q3y=[xtmp*np.tan(b3) for xtmp in q3x]
 
 
 
-fig,ax=plt.subplots(figsize=(20,20))
+
 
 ax.spines['bottom'].set_color('grey')
 ax.spines['bottom'].set_position('zero')
@@ -86,7 +96,7 @@ ax.fill_between(p2x,p2y,q1y,color="aquamarine")
 #left I-II
 ax.fill_between(p5x,p5y,q2y,color="aquamarine")
 ax.ticklabel_format(axis="y", style="sci", scilimits=(0,0))
-plt.ticklabel_format(axis="x", style="sci", scilimits=(0,0))
+ax.ticklabel_format(axis="x", style="sci", scilimits=(0,0))
 #color filling
 p=int(N/2)
 #region right I-I
@@ -107,18 +117,17 @@ ax.text(tx,ty,"I-II",fontsize=16)
 tx=p5x[p]
 ty=1/3*(2*p5y[p]+q2y[p])
 ax.text(tx,ty,"I-II",fontsize=16)
-#compute roots
-g=0.01
-E=g**(-1/3)*c
-coefs=[-1j*g,0,0,1,0,-E]
-rootsAll=np.roots(coefs)
-print(np.abs(rootsAll))
-sVal=30
+
+#plot roots
 for tmp in rootsAll:
     ax.scatter(np.real(tmp),np.imag(tmp),color="black",s=sVal)
 
-ax.set_title("$x^{2}-igx^{5}-E=0$, $g=$"+str(g)+", $E=$"+'{:.2e}'.format(Decimal(str(E))))
+
+
+ERe=np.real(E)
+EIm=np.imag(E)
+ax.set_title("$x^{2}-igx^{5}-E=0$, $g=$"+str(g)+", $E=$"+'{:.2e}'.format(Decimal(str(ERe)))+"+i"+'{:.2e}'.format(Decimal(str(EIm))))
 
 
 
-plt.savefig("./potential4/"+str(coefs)+".png")
+plt.savefig("./potential4/"+str(coefs)+"c="+str(c)+".png")
