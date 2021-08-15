@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.optimize as sopt
 import matplotlib.pyplot as plt
+from  multiprocessing import Pool
 from datetime import datetime
 import mpmath
 from mpmath import mp
@@ -150,6 +151,17 @@ def eqn(EIn, *data):
     rst = integralQuadrature(g,E,x1,x2) - (n + 1 / 2) * np.pi
     return np.real(rst), np.imag(rst)
 
+def computeOneSolution(inData):
+    '''
+
+    :param inData: [n,g]
+    :return: [n,g, re(E), im(E)]
+    '''
+    n,g=inData
+
+    eVecTmp=sopt.fsolve(eqn, [np.abs(n + 0.5), 0],args=inData,maxfev=100,xtol=1e-7)
+
+    return [n,g,eVecTmp[0],eVecTmp[1]]
 
 ###functions for WKB end here
 
