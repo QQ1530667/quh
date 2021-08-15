@@ -2,7 +2,9 @@ import numpy as np
 import scipy.optimize as sopt
 import matplotlib.pyplot as plt
 from datetime import datetime
-
+import mpmath
+from mpmath import mp
+mp.dps=100
 
 # this script combines calculations from WKB
 # and shooting as a verification for potential 4, V(x)=x^{2}-igx^{5}
@@ -94,7 +96,25 @@ def simpInt(g, E, N, x1, x2):
                                                 + 2 * sum(fValsEven)
                                                 + f(zAll[N], g, E)
                                                 )
+def integralQuadrature(g,E,x1,x2):
+    '''
 
+    :param g: const
+    :param E: trial eigenvalue
+    :param x1: ending point
+    :param x2: starting point
+    :return:
+    '''
+    a1 = np.real(x1)
+    b1 = np.imag(x1)
+
+    a2 = np.real(x2)
+    b2 = np.imag(x2)
+
+
+    slope = (b1 - b2) / (a1 - a2)
+    gFunc=lambda y:f(y+1j*(slope*(y-a2)+b2),g,E)
+    return (1+1j*slope)*mpmath.quad(gFunc,[a2,a1])
 
 def testRoots(g, E):
     '''
@@ -125,9 +145,9 @@ def eqn(EIn, *data):
 
     E = EIn[0] + 1j * EIn[1]
     x1, x2 = retX1X2(g, E)
-    dx = 1e-4
-    N = int(np.abs(x2 - x1) / dx)
-    rst = simpInt(g, E, N, x1, x2) - (n + 1 / 2) * np.pi
+    # dx = 1e-4
+    # N = int(np.abs(x2 - x1) / dx)
+    rst = integralQuadrature(g,E,x1,x2) - (n + 1 / 2) * np.pi
     return np.real(rst), np.imag(rst)
 
 
