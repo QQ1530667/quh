@@ -3,6 +3,7 @@ import scipy.optimize as sopt
 import matplotlib.pyplot as plt
 from datetime import datetime
 from multiprocessing import Pool
+import scipy.special as sspecial
 import mpmath
 from mpmath import mp
 mp.dps=100
@@ -11,6 +12,8 @@ mp.dps=100
 # in region I-II
 # WKB part
 
+def P(a):
+    return 2*a-5*1j*a**4
 def retX1X2(g, E):
     '''
     :param g: const
@@ -21,9 +24,23 @@ def retX1X2(g, E):
     rootsAll = np.roots(coefs)
     # print(rootsAll)
     rootsAll = sorted(rootsAll, key=np.angle, reverse=True)
-    x1Val = rootsAll[3]
-    x2Val = rootsAll[4]
-
+    elemInMinusPi=[]
+    for rtTmp in rootsAll:
+        if np.angle(rtTmp)>-np.pi and np.angle(rtTmp)<0:
+            elemInMinusPi.append(rtTmp)
+    if len(elemInMinusPi)==2:
+        x1Val = rootsAll[3]
+        x2Val = rootsAll[4]
+    elif len(elemInMinusPi)==3:
+        x1Val=rootsAll[2]
+        x2Val=rootsAll[3]
+    ################################
+    # a01 = np.exp(-1j * np.pi / 6)
+    # a02 = np.exp(-1j * 5 / 6 * np.pi)
+    # y1 = a01 + 1 / P(a01) * g ** (2 / 3) * E
+    # y2 = a02 + 1 / P(a02) * g ** (2 / 3) * E
+    # x1Val = g ** (-1 / 3) * y1
+    # x2Val = g ** (-1 / 3) * y2
     # print(x1Val)
     return x1Val, x2Val
 
@@ -101,10 +118,15 @@ def eqn(EIn,*data):
     n,g=data
 
     E = EIn[0] + 1j * EIn[1]
+    # print("current E="+str(E))
     x1, x2 = retX1X2(g,E)
     # dx = 1e-4
     # N = int(np.abs(x2 - x1) / dx)
-    rst =integralQuadrature(g,E,x1,x2) - (n+1/2) * np.pi
+    intVal=integralQuadrature(g,E,x1,x2)
+    # intEst=g**(-2/3)*2/5*np.cos(3/10*np.pi)*(g**(2/3)*E)**(7/10)*sspecial.beta(1/5,3/2)
+    # print("intVal="+str(intVal))
+    # print("intEst="+str(intEst))
+    rst =intVal - (n+1/2) * np.pi
     return np.real(rst), np.imag(rst)
 
 
@@ -116,10 +138,68 @@ def computeOneSolution(inData):
     '''
     n,g=inData
 
-    eVecTmp=sopt.fsolve(eqn, [np.abs(n + 0.5), 0],args=inData,maxfev=100,xtol=1e-7)
+    eVecTmp=sopt.fsolve(eqn, [np.abs(n + 0.5), 0],args=inData,maxfev=100,xtol=1e-2)
 
     return [n,g,eVecTmp[0],eVecTmp[1]]
 
+#approximation of E
+def f4(y):
+    return (1j*y**5-y**2)**(1/2)
+def f5(y):
+    return (1j*y**5-y**2)**(-1/2)
+def I4(y2,y1):
+    c1=np.real(y1)
+    d1=np.imag(y1)
 
-# print(computeOneSolution((1,1)))
+    c2=np.real(y2)
+    d2=np.imag(y2)
+    dx=1e-3
+    N=int(np.abs(y2-y1)/dx)
+    zAll=np.linspace(start=y2,stop=y1,num=N+1)
+    oddVals4=[f4(zAll[j]) for j in range(1,N,2)]
+    evenVals4=[f4(zAll[j]) for j in range(2,N,2)]
+    return 1/3*(c1-c2)/N*(1+1j*(d1-d2)/(c1-c2))*(f4(zAll[0])+4*sum(oddVals4)+2*sum(evenVals4)+f4((zAll[N])))
 
+
+def I5(y2,y1):
+    lmd=0.1
+    y2p=lmd*(y1-y2)+y2
+    y1p=(1-lmd)*(y1-y2)+y2
+
+    c1p=np.real(y1p)
+    d1p=np.imag(y1p)
+
+    c2p=np.real(y2p)
+    d2p=np.imag(y2p)
+    dx=1e-3
+    N=int(np.abs(y1p-y2p)/dx)
+    zAll=np.linspace(start=y2p,stop=y1p,num=N+1)
+    oddVals5=[f5(zAll[j]) for j in range(1,N,2)]
+    evenVals=[f5(zAll[j]) for j in range(2,N,2)]
+    return 1/3*(c1p-c2p)/N*(1+1j*(d1p-d2p)/(c1p-c2p))*(f5(zAll[0])+4*sum(oddVals5)+2*sum(evenVals)+f5(zAll[N]))
+def computeOneSolutionWithInit(inData):
+    '''
+
+    :param inData: [n,g,Eest]
+    :return: [n,g,re(E), im(E)]
+    '''
+    n,g,Eest=inData
+
+    eVecTmp=sopt.fsolve(eqn,[np.real(Eest),np.imag(Eest)],args=(n,g),maxfev=100,xtol=1e-3)
+    return [n,g,eVecTmp[0],eVecTmp[1]]
+
+
+def estLargeE(n,g):
+    rst=(5*(n+1/2)*np.pi*g**(1/5)/(
+        2*np.cos(3/10*np.pi)*sspecial.beta(1/5,3/2)
+    )
+         )**(10/7)
+    return rst
+# a01=np.exp(-1j*1/6*np.pi)
+# a02=np.exp(-1j*5/6*np.pi)
+# g=0.1
+# y2=a02
+# y1=a01
+# n=10
+# Eest=2*((n+1/2)*np.pi-g**(-2/3)*I4(y2,y1))/I5(y2,y1)
+# print(computeOneSolutionWithInit([n,g,Eest]))
