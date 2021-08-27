@@ -6,7 +6,7 @@ from datetime import datetime
 import mpmath
 from mpmath import mp
 mp.dps=100
-
+import scipy.special as sspecial
 # this script combines calculations from WKB
 # and shooting as a verification for potential 4, V(x)=x^{2}-igx^{5}
 # in region I-I
@@ -33,13 +33,13 @@ def chooseX2(xTmp):
     ret = (angleTmp >= -np.pi and angleTmp <= -13 / 14 * np.pi) or (angleTmp >= 11 / 14 * np.pi and angleTmp < np.pi)
     return ret
 
-
 def retX1X2(g, E):
     '''
     :param g: const
     :param E: trial eigenvalue
     :return: x1 and x2 of
     '''
+
     coefs = [-1j * g, 0, 0, 1, 0, -E]
     rootsAll = np.roots(coefs)
     # print(rootsAll)
@@ -163,6 +163,7 @@ def computeOneSolution(inData):
 
     return [n,g,eVecTmp[0],eVecTmp[1]]
 
+
 ###functions for WKB end here
 
 # shooting part
@@ -235,3 +236,17 @@ def calculateBoundaryValue(E, *data):
         vAll.append(vNext)
     # boundary condition: Re(vN/yN)=0
     return np.real(vAll[-1] / yAll[-1])
+
+
+#dominant WKB part starts here
+
+# x^2 dominant
+def domE2(n):
+    return 2*n+1
+
+# -igx^5 dominant
+def domE5(n,g):
+    return (
+                   5*(n+1/2)*np.pi*g**(1/5)/(2*np.cos(1/10*np.pi)*sspecial.beta(1/5,3/2)
+                                             )
+            )**(10/7)
