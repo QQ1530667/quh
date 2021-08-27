@@ -7,6 +7,7 @@ import scipy.special as sspecial
 import mpmath
 from mpmath import mp
 mp.dps=100
+
 # this script combines calculations from WKB
 # and shooting as a verification for potential 4, V(x)=x^{2}-igx^{5}
 # in region I-II
@@ -189,8 +190,10 @@ def computeOneSolutionWithInit(inData):
     return [n,g,eVecTmp[0],eVecTmp[1]]
 
 
-def estLargeE(n,g):
-    rst=(5*(n+1/2)*np.pi*g**(1/5)/(
+#-igx^5 dominant
+def dom5E(n,g):
+    rst=(
+                5*(n+1/2)*np.pi*g**(1/5)/(
         2*np.cos(3/10*np.pi)*sspecial.beta(1/5,3/2)
     )
          )**(10/7)
@@ -203,3 +206,5 @@ def estLargeE(n,g):
 # n=10
 # Eest=2*((n+1/2)*np.pi-g**(-2/3)*I4(y2,y1))/I5(y2,y1)
 # print(computeOneSolutionWithInit([n,g,Eest]))
+
+
