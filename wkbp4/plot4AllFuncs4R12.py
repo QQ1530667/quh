@@ -142,7 +142,7 @@ def eqn(EIn,*data):
 
     E = EIn[0] + 1j * EIn[1]
     # print("current E="+str(E))
-    x1, x2 = retX1X2(g,E)
+    x1, x2 = retX1X2New(g,E)
     # dx = 1e-4
     # N = int(np.abs(x2 - x1) / dx)
     intVal=integralQuadrature(g,E,x1,x2)
