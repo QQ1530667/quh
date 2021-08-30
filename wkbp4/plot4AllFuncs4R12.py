@@ -45,6 +45,28 @@ def retX1X2(g, E):
     # print(x1Val)
     return x1Val, x2Val
 
+def retX1X2New(g, E):
+    '''
+
+    :param g: const
+    :param E: trial eigenvalue
+    :return: x1 and x2 of region I-II
+    '''
+    coefs = [-1j * g, 0, 0, 1, 0, -E]
+    rootsAll = np.roots(coefs)
+    # print(rootsAll)
+    rtsSmallerThanMinusPiOver2=[]
+    rtsLargerThanMinusPiOver2=[]
+    for rtTmp in rootsAll:
+        if np.angle(rtTmp)<-np.pi/2:
+            rtsSmallerThanMinusPiOver2.append(rtTmp)
+        else:
+            rtsLargerThanMinusPiOver2.append(rtTmp)
+    rtsSmallerThanMinusPiOver2=sorted(rtsSmallerThanMinusPiOver2,key=np.angle)
+    rtsLargerThanMinusPiOver2=sorted(rtsLargerThanMinusPiOver2,key=np.angle)
+    x2=rtsSmallerThanMinusPiOver2[-1]
+    x1=rtsLargerThanMinusPiOver2[0]
+    return x1,x2
 
 def f(z, g, E):
     '''
