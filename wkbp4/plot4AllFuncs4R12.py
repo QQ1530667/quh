@@ -72,7 +72,8 @@ def returnFivePairsOfRoots(g,E):
 
     :param g: const
     :param E: trial eigenvalue
-    :return: an adjacent pair of roots, the first has smaller angle than the second root
+    :return: an adjacent pair of roots, the first has smaller angle than the second root,
+    the order is [x2, x1]
     '''
     coefs = [-1j * g, 0, 0, 1, 0, -E]
     rootsAll = np.roots(coefs)
@@ -194,6 +195,26 @@ def eqn(EIn,*data):
     # print("intEst="+str(intEst))
     rst =intVal - (n+1/2) * np.pi
     return np.real(rst), np.imag(rst)
+
+def eqnFivePairs(EIn,*data):
+    """
+
+    :param EIn: trial eigenvalue, in the form of [re, im]
+    :param data:
+    :return:
+    """
+    n,g =data
+    E = EIn[0] + 1j * EIn[1]
+    pairsAll=returnFivePairsOfRoots(g,E)
+    rstValsAll=[]
+    for onePair in pairsAll:
+        x2Tmp,x1Tmp=onePair
+        intValTmp=integralQuadrature(g,E,x1Tmp,x2Tmp)
+        rstTmp=intValTmp- (n+1/2) * np.pi
+        rstValsAll.append(rstTmp)
+    rstValsAll=sorted(rstValsAll,key=np.abs)
+    root0=rstValsAll[0]
+    return np.real(root0), np.imag(root0)
 
 
 def computeOneSolution(inData):
