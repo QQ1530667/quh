@@ -276,7 +276,15 @@ def computeOneSolutionWithInit(inData):
     # eVecTmp = sopt.fsolve(eqn, [np.abs(n+0.5), 0.01], args=(n, g), maxfev=100, xtol=1e-3)
     return [n,g,eVecTmp[0],eVecTmp[1]]
 
+def computeOneSolutionWithInitWith5Pairs(inData):
+    """
 
+    :param inData: [n,g,Eest]
+    :return: [n,g,re(E), im(E)]
+    """
+    n, g, Eest = inData
+    eVecTmp=sopt.fsolve(eqnFivePairs,[np.real(Eest),np.imag(Eest)],args=(n,g),maxfev=100,xtol=1e-3)
+    return [n, g, eVecTmp[0], eVecTmp[1]]
 #-igx^5 dominant
 def dom5E(n,g):
     rst=(
