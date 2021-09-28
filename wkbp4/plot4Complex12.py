@@ -10,40 +10,53 @@ n=0
 
 fig,ax=plt.subplots(figsize=(20,20))
 ax.scatter((n+1/2)*np.pi,0,color="red",marker="+",s=40)
-r=3.25
+r=12
 #plot circle
-thetaAll=np.linspace(start=0,stop=2*np.pi,num=100)
+thetaAll=np.linspace(start=-np.pi,stop=np.pi,num=100)
 tStart=datetime.now()
-intValsAll=[]
+int12345ValsAll=[]#contains 5 lists of integral values
+for j in range(0,5):
+    int12345ValsAll.append([])
 for thTmp in thetaAll:
     ETmp=r*np.exp(1j*thTmp)
-    x1,x2=retX1X2New(g,ETmp)
-    intValsAll.append(integralQuadrature(g,ETmp,x1,x2))
+    # x1,x2=retX1X2New(g,ETmp)
+    # int1ValsAll.append(integralQuadrature(g,ETmp,x1,x2))
+    # int2ValsAll.append(integralQuadratureAnotherBranch(g,ETmp,x1,x2))
+    rootPairs=returnFivePairsOfRoots(g,ETmp)
+    for j in range(0,len(rootPairs)):
+        x2Tmp,x1Tmp=rootPairs[j]
+        int12345ValsAll[j].append(integralQuadrature(g,ETmp,x1Tmp,x2Tmp))
+
 
 tEnd=datetime.now()
 print("time : ",tEnd-tStart)
-intReal=[]
-intImag=[]
+# int1Real=[]
+# int1Imag=[]
+# int2Real=[]
+# int2Imag=[]
+# for int1Tmp in int1ValsAll:
+#     int1Real.append(np.real(int1Tmp))
+#     int1Imag.append(np.imag(int1Tmp))
+# for int2Tmp in int2ValsAll:
+#     int2Real.append(np.real(int2Tmp))
+#     int2Imag.append(np.imag(int2Tmp))
+#
+# ax.scatter(int1Real,int1Imag,color="black")
+# ax.scatter(int2Real,int2Imag,color="red")
+# plt.title("r="+str(r))
+colorList=["b","g","r","m","k"]
+for j in range(0,5):
+    intTmpReal=[]
+    intTmpImag=[]
+    for intTmp in int12345ValsAll[j]:
+        intTmpReal.append(np.real(intTmp))
+        intTmpImag.append(np.imag(intTmp))
 
-for intTmp in intValsAll:
-    intReal.append(np.real(intTmp))
-    intImag.append(np.imag(intTmp))
-ax.scatter(intReal,intImag,color="black")
+    ax.scatter(intTmpReal,intTmpImag,color=colorList[j])
+
+plt.title("r="+str(r))
 
 
-
-
-
-plt.savefig("g"+str(g)+"r"+str(r)+"energyIntersectionR12.png")
+plt.savefig("./energyCircleR12/g"+str(g)+"r"+str(r)+"energyIntersectionR12.png")
 plt.close()
 
-intDistAll=[np.abs(elem-(n+1/2)*np.pi) for elem in intValsAll]
-
-intOrd=sorted(range(len(intDistAll)),key=lambda k: intDistAll[k])
-th0Ind=intOrd[0]
-th1Ind=intOrd[1]
-
-e0=r*np.exp(1j*thetaAll[th0Ind])
-e1=r*np.exp(1j*thetaAll[th1Ind])
-print(e0)
-print(e1)
