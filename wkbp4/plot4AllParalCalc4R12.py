@@ -1,10 +1,10 @@
-from .plot4AllFuncs4R12 import *
+from plot4AllFuncs4R12 import *
 
 # this script calculates and plots eigenvalues, potential 4, V(x)=x^{2}-igx^{5}
 # Region I-II
 
-num=1000
-startG=1e-5
+num=5
+startG=1e-3
 stopG=1e-1
 
 gnIndAll = np.linspace(start=np.log10(startG), stop=np.log10(stopG), num=num)
@@ -19,21 +19,22 @@ y1=np.exp(-1j*1/6*np.pi)
 
 # calculate WKB eigenvalues
 threadNum = 24
-energyLevelMax = 10
+energyLevelMax = 3
 levelsAll = range(0, energyLevelMax + 1)
 inDataAll=[]
 for nTmp in levelsAll:
     for gTmp in gAll:
         EEst=2*((nTmp+1/2)*np.pi-gTmp**(-2/3)*I4(y2,y1))/I5(y2,y1)
         if np.abs(gTmp**(2/3)*EEst)<1:
+            EEst=np.abs(nTmp+0.5)+0.01j
             inDataAll.append([nTmp,gTmp,EEst])
-            inDataAll.append([nTmp,gTmp,np.conj(EEst)])
+
         else:
-            inDataAll.append([nTmp,gTmp,estLargeE(nTmp,gTmp)])
+            inDataAll.append([nTmp,gTmp,dom5E(nTmp,gTmp)])
 
 tWKBParalStart = datetime.now()
 pool1 = Pool(threadNum)
-retAll=pool1.map(computeOneSolutionWithInit,inDataAll)
+retAll=pool1.map(computeOneSolutionWithInitWith5Pairs,inDataAll)
 # inDataAll = []
 # for nTmp in levelsAll:
 #     for gTmp in gAll:
@@ -92,26 +93,26 @@ for itemTmp in retAll:
 
 # -igx^5 dominant plot
 
-ngEDom5ValsAll=[]
-for nTmp in levelsAll:
-    for gTmp in gAll:
-        ngEDom5ValsAll.append([nTmp,gTmp,dom5E(nTmp,gTmp)])
+# ngEDom5ValsAll=[]
+# for nTmp in levelsAll:
+#     for gTmp in gAll:
+#         ngEDom5ValsAll.append([nTmp,gTmp,dom5E(nTmp,gTmp)])
 
 #data serialization for -igx^5
-gDom5Vals=[]
-EDom5Vals=[]
-for itemTmp in ngEDom5ValsAll:
-    gDom5Vals.append(itemTmp[1])
-    EDom5Vals.append(itemTmp[2])
+# gDom5Vals=[]
+# EDom5Vals=[]
+# for itemTmp in ngEDom5ValsAll:
+#     gDom5Vals.append(itemTmp[1])
+#     EDom5Vals.append(itemTmp[2])
 
 #scatter plot of dom5
-dom5Scatter=ax.scatter(gDom5Vals,EDom5Vals,color="blue",marker="+",s=50,label="$-igx^{5}$ dominant")
+# dom5Scatter=ax.scatter(gDom5Vals,EDom5Vals,color="blue",marker="+",s=50,label="$-igx^{5}$ dominant")
 
 
 sctRealPartWKB = ax.scatter(gSctVals, ERealSctVals, color="red", marker=".", s=50, label="WKB real part")
 plt.legend()
 dirName="/home/users/nus/e0385051/Documents/pyCode/wkb/wkbp4/"
-plt.savefig("start"+str(startG)+"stop"+str(stopG)+"num"+str(num)+"tmp124.png")
+plt.savefig("start"+str(startG)+"stop"+str(stopG)+"num"+str(num)+"tmp125.png")
 
 tPltEnd = datetime.now()
 print("plotting time: ", tPltEnd - tPltStart)
