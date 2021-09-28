@@ -67,7 +67,20 @@ def retX1X2New(g, E):
     x2=rtsSmallerThanMinusPiOver2[-1]
     x1=rtsLargerThanMinusPiOver2[0]
     return x1,x2
+def returnFivePairsOfRoots(g,E):
+    '''
 
+    :param g: const
+    :param E: trial eigenvalue
+    :return: an adjacent pair of roots, the first has smaller angle than the second root
+    '''
+    coefs = [-1j * g, 0, 0, 1, 0, -E]
+    rootsAll = np.roots(coefs)
+    rootsSortedByAngle=sorted(rootsAll,key=np.angle)
+    rst=[]
+    for j in range(0,len(rootsSortedByAngle)):
+        rst.append([rootsSortedByAngle[j],rootsSortedByAngle[(j+1)%len(rootsSortedByAngle)]])
+    return rst
 def f(z, g, E):
     '''
     :param g: const
@@ -76,7 +89,15 @@ def f(z, g, E):
     :return: f value
     '''
     return (1j * g * z ** 5 - z ** 2 + E) ** (1 / 2)
+def fBranchOther(z,g,E):
+    '''
 
+    :param z: point on x2x1
+    :param g: const
+    :param E: trial eigenvalue
+    :return: f value on another branch
+    '''
+    return -(1j * g * z ** 5 - z ** 2 + E) ** (1 / 2)
 
 def simpInt(g, E, N, x1, x2):
     '''
@@ -131,6 +152,27 @@ def integralQuadrature(g,E,x1,x2):
     gFunc=lambda y:f(y+1j*(slope*(y-a2)+b2),g,E)
     return (1+1j*slope)*mpmath.quad(gFunc,[a2,a1])
 
+def integralQuadratureAnotherBranch(g,E,x1,x2):
+    '''
+
+    :param g: const
+    :param E: trial eigenvalue
+    :param x1: ending point
+    :param x2: starting point
+    :return:
+    '''
+    a1 = np.real(x1)
+    b1 = np.imag(x1)
+
+    a2 = np.real(x2)
+    b2 = np.imag(x2)
+
+    slope = (b1 - b2) / (a1 - a2)
+    gFunc = lambda y: fBranchOther(y + 1j * (slope * (y - a2) + b2), g, E)
+    return (1 + 1j * slope) * mpmath.quad(gFunc, [a2, a1])
+
+
+
 def eqn(EIn,*data):
     '''
 
@@ -142,6 +184,7 @@ def eqn(EIn,*data):
 
     E = EIn[0] + 1j * EIn[1]
     # print("current E="+str(E))
+    # x1, x2 = retX1X2(g,E)
     x1, x2 = retX1X2New(g,E)
     # dx = 1e-4
     # N = int(np.abs(x2 - x1) / dx)
@@ -209,6 +252,7 @@ def computeOneSolutionWithInit(inData):
     n,g,Eest=inData
 
     eVecTmp=sopt.fsolve(eqn,[np.real(Eest),np.imag(Eest)],args=(n,g),maxfev=100,xtol=1e-3)
+    # eVecTmp = sopt.fsolve(eqn, [np.abs(n+0.5), 0.01], args=(n, g), maxfev=100, xtol=1e-3)
     return [n,g,eVecTmp[0],eVecTmp[1]]
 
 
