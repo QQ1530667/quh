@@ -72,7 +72,7 @@ def returnFivePairsOfRoots(g,E):
 
     :param g: const
     :param E: trial eigenvalue
-    :return: an adjacent pair of roots, the first has smaller angle than the second root,
+    :return: 5 adjacent pairs of roots, the first has smaller angle than the second root,
     the order is [x2, x1]
     '''
     coefs = [-1j * g, 0, 0, 1, 0, -E]
@@ -81,6 +81,22 @@ def returnFivePairsOfRoots(g,E):
     rst=[]
     for j in range(0,len(rootsSortedByAngle)):
         rst.append([rootsSortedByAngle[j],rootsSortedByAngle[(j+1)%len(rootsSortedByAngle)]])
+    return rst
+
+def returnFivePairsSeparatedByOneRoot(g,E):
+    '''
+
+    :param g: const
+    :param E: trial eigenvalue
+    :return: a pair of roots separated by another root, the first has smaller angle than the second root,
+    the order is [x2, x1]
+    '''
+    coefs = [-1j * g, 0, 0, 1, 0, -E]
+    rootsAll = np.roots(coefs)
+    rootsSortedByAngle = sorted(rootsAll, key=np.angle)
+    rst = []
+    for j in range(0, len(rootsSortedByAngle)):
+        rst.append([rootsSortedByAngle[j], rootsSortedByAngle[(j + 2) % len(rootsSortedByAngle)]])
     return rst
 def f(z, g, E):
     '''
@@ -205,16 +221,26 @@ def eqnFivePairs(EIn,*data):
     """
     n,g =data
     E = EIn[0] + 1j * EIn[1]
-    pairsAll=returnFivePairsOfRoots(g,E)
+    pairsAll=returnFivePairsSeparatedByOneRoot(g,E)
     rstValsAll=[]
+    rstValsAllAnother=[]
     for onePair in pairsAll:
         x2Tmp,x1Tmp=onePair
         intValTmp=integralQuadrature(g,E,x1Tmp,x2Tmp)
         rstTmp=intValTmp- (n+1/2) * np.pi
         rstValsAll.append(rstTmp)
-    rstValsAll=sorted(rstValsAll,key=np.abs)
-    root0=rstValsAll[0]
+
+    for onePair in pairsAll:
+        x2Tmp, x1Tmp=onePair
+        intValTmp=integralQuadratureAnotherBranch(g,E,x1Tmp,x2Tmp)
+        rstTmp=intValTmp-(n+1/2)*np.pi
+        rstValsAllAnother.append(rstTmp)
+
+    rstCombined=rstValsAll+rstValsAllAnother
+    rstSorted=sorted(rstCombined,key=np.abs)
+    root0=rstSorted[0]
     return np.real(root0), np.imag(root0)
+
 
 
 def computeOneSolution(inData):
