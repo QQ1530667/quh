@@ -88,7 +88,7 @@ def returnFivePairsSeparatedByOneRoot(g,E):
 
     :param g: const
     :param E: trial eigenvalue
-    :return: a pair of roots separated by another root, the first has smaller angle than the second root,
+    :return: 5 pairs of roots separated by another root, the first has smaller angle than the second root,
     the order is [x2, x1]
     '''
     coefs = [-1j * g, 0, 0, 1, 0, -E]
